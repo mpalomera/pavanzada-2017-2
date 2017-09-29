@@ -63,15 +63,17 @@ void upsertDictionary(Dict *dictionary, char *key, void *value, int size, int *e
     int index = hash(key, dictionary->size);
     dictionary->elements[index].key = key;
     dictionary->elements[index].value = malloc(size);
-    if(dictionary->elements[index].value == NULL){
+    if (dictionary->elements[index].value == NULL)
+    {
         *errorCode = 100;
         return;
     }
-    memcpy(dictionary->elements[index].value,value,size);
+    memcpy(dictionary->elements[index].value, value, size);
     *errorCode = 0;
 }
 
-void * getDictionary(Dict *dictionary,char *key,int size, int *errorCode) {
+void *getDictionary(Dict *dictionary, char *key, int size, int *errorCode)
+{
     if (dictionary == NULL)
     {
         *errorCode = 100;
@@ -80,7 +82,8 @@ void * getDictionary(Dict *dictionary,char *key,int size, int *errorCode) {
     if (dictionary->elements == NULL)
     {
         *errorCode = 100;
-        return NULL;;
+        return NULL;
+        ;
     }
     if (key == NULL)
     {
@@ -94,11 +97,16 @@ void * getDictionary(Dict *dictionary,char *key,int size, int *errorCode) {
     }
 
     int index = hash(key, dictionary->size);
+    if (dictionary->elements[index].key == 0)
+    {
+        return NULL;
+    }
     void *result = malloc(size);
-    if(result == NULL){
+    if (result == NULL)
+    {
         *errorCode = 100;
         return NULL;
     }
-    memcpy(result,dictionary->elements[index].value,size);
+    memcpy(result, dictionary->elements[index].value, size);
     return result;
 }
