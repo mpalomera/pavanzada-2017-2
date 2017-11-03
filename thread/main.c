@@ -8,24 +8,33 @@
 #define NUM_THREADS 10
 
 unsigned int total;
-//sem_t sem1;
-dispatch_semaphore_t sem1;
+//sem_t forks[NUM_THREADS];
+dispatch_semaphore_t forks[NUM_THREADS];
+void thinking(int n) {
+  sleep(rand()%n);
+}
+void eating(int n) {
+  sleep(rand()%n);
+}
 
-void *add100(void *threadid)
+void *lifeStyle(void *threadid)
 {
   long tid;
   tid = (long)threadid;
-  unsigned int localTotal;
-  printf("Adding 100 #%ld!\n", tid);
-  //sem_wait(&sem1);
-  dispatch_semaphore_wait(sem1, DISPATCH_TIME_FOREVER);
-  localTotal = total;
-  localTotal += 100;
-  //sleep(tid % 3);
-  total = localTotal;
-  //sem_post(&sem1);
-  dispatch_semaphore_signal(sem1);
-  pthread_exit(NULL);
+  while(1) {
+    thinking(3); //
+    printf("I am phil %lu, I am hungry \n", tid);
+    //sem_wait(&forks[tid]);
+    //sem_wait(&forks[(tid + 1 )%NUM_THREADS]);
+    dispatch_semaphore_wait(forks[tid], DISPATCH_TIME_FOREVER);
+    dispatch_semaphore_wait(forks[(tid + 1 )%NUM_THREADS], DISPATCH_TIME_FOREVER);
+    eating(4);
+    dispatch_semaphore_signal(forks[tid]);
+    dispatch_semaphore_signal(forks[(tid + 1 )%NUM_THREADS]);
+    //sem_post(&forks[tid]);
+    //sem_post(&forks[(tid + 1 )%NUM_THREADS]);
+    printf("I am phil %lu, I am thinking \n", tid);
+  }
 }
 
 int main(int argc, char *argv[])
@@ -33,15 +42,15 @@ int main(int argc, char *argv[])
   pthread_t threads[NUM_THREADS];
   int rc;
   long t;
-  total = 0;
-  //sem1 = 1;
-  //sem_init(&sem1, 1, 1);
-  sem1 = dispatch_semaphore_create(1);
-  printf("Initial total = %d \n", total);
+  
+  for (t = 0; t < NUM_THREADS; t++) {
+    //sem_init(&forks[t],0,1);
+    forks[t] = dispatch_semaphore_create(1);
+  }
   for (t = 0; t < NUM_THREADS; t++)
   {
     printf("In main: creating thread %ld\n", t);
-    rc = pthread_create(&threads[t], NULL, add100, (void *)t);
+    rc = pthread_create(&threads[t], NULL, lifeStyle, (void *)t);
     if (rc)
     {
       printf("ERROR; return code from pthread_create() is %d\n", rc);
@@ -52,7 +61,7 @@ int main(int argc, char *argv[])
   {
     pthread_join(threads[t], NULL);
   }
-  printf("Final total = %d \n", total);
+ 
   /* Last thing that main() should do */
   pthread_exit(NULL);
 }
